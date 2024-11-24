@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoTIFF on Leaflet Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"></script>
+    <!-- Corrected GeoTIFF.js library -->
+    <script src="https://unpkg.com/geotiff@1.0.0/dist/geotiff.bundle.min.js"></script>
+    <!-- Leaflet GeoTIFF plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-geotiff@1.1.0/leaflet-geotiff.min.js"></script>
+    <style>
+        #map {
+            height: 100vh;
+        }
+        #file-input {
+            position: absolute;
+            z-index: 1000;
+            top: 10px;
+            left: 10px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="file-input" />
+    <div id="map"></div>
+
+    <script>
+        // Check if GeoTIFF.js library is loaded
+        if (typeof GeoTIFF === 'undefined') {
+            console.error("GeoTIFF.js library is not loaded correctly.");
+        } else {
+            console.log("GeoTIFF.js library is loaded.");
+        }
+
+        // Initialize the map (you can adjust the initial view to your preferred location)
+        const map = L.map('map').setView([40.4637, -3.7492], 6);
+
+        // Add OpenStreetMap base tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Handle file selection for GeoTIFF
+        document.getElementById('file-input').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Read the selected file as ArrayBuffer
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const arrayBuffer = event.target.result;
+
+                // Parse the GeoTIFF file using GeoTIFF.js
+                const tiff = GeoTIFF.parse(arrayBuffer);
+                const image = tiff.getImage();
+
+                // Use leaflet-geotiff to display the image
+                const geotiffLayer = L.leafletGeotiff(image, {
+                    band: 0,  // If there are multiple bands, specify which one to use
+                    opacity: 0.7,
+                    resolution: 256,
+                }).addTo(map);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
